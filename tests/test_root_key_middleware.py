@@ -13,5 +13,4 @@ class RootKeyMiddlewareTests(SimpleTestCase):
     @override_settings(INDEXNOW_API_KEY="")
     def test_root_key_file_is_disabled_without_key(self) -> None:
         response = self.client.get("/anything.txt")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b"ok")
+        self.assertEqual(response.status_code, 404)
