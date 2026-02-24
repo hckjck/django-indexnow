@@ -1,143 +1,124 @@
 # django-indexnow
 
-**django-indexnow** is a lightweight Django app that makes it easy to notify search engines about changes on your site **immediately**.
+`django-indexnow` is a minimal Django app that submits updated URLs to IndexNow-compatible search engines.
 
-Instead of waiting days or weeks for crawlers to discover updates, this app uses the [IndexNow](https://www.indexnow.org) protocol to proactively tell participating search engines when URLs are created, updated, or deleted.
-
-The app is intentionally simple and designed for easy integration into existing Django projects.
-
----
-
-## Features
-
-* 🚀 Instant URL submission via IndexNow
-* 🔔 Signal-based API (create, update, delete)
-* 🧩 Minimal setup
-* 🐍 Pure Django, no extra dependencies
-
----
+It is designed to stay small: Django + Python standard library only.
 
 ## Installation
-
-Install the package:
 
 ```bash
 pip install django-indexnow
 ```
 
-Add it to your installed apps:
+Add the app and middleware:
 
 ```python
 INSTALLED_APPS = [
-    ...
+    # ...
+    "django.contrib.sites",
     "indexnow",
+]
+
+MIDDLEWARE = [
+    # ...
+    "indexnow.middleware.IndexNowKeyFileMiddleware",
 ]
 ```
 
----
+Expose the app endpoint:
+
+```python
+# urls.py
+from django.urls import include, path
+
+urlpatterns = [
+    # ...
+    path("indexnow/", include("indexnow.urls")),
+]
+```
 
 ## Configuration
 
-### Create an IndexNow API key
-
-IndexNow requires a unique API key that must be publicly accessible.
-
-Create a new key (example):
-
-```bash
-openssl rand -hex 16
-```
-
-This will generate a random key like:
-
-```
-a1b2c3d4e5f67890abcdef1234567890
-```
-
-### Add the key to your Django settings
+Supported settings:
 
 ```python
-INDEXNOW_API_KEY = "a1b2c3d4e5f67890abcdef1234567890"
+INDEXNOW_API_KEY = "your-32-char-hex-key"  # optional; missing/empty disables app
+INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow"  # optional
+INDEXNOW_TIMEOUT = 5  # optional
+INDEXNOW_DEBUG_LOGGING = False  # optional
+INDEXNOW_USER_AGENT = "django-indexnow/0.1.0"  # optional
+INDEXNOW_DEDUPE_SECONDS = 60  # optional; 0 disables dedupe
 ```
 
----
+Behavior is automatic:
 
-## Verify setup
+- If `INDEXNOW_API_KEY` is set and non-empty, endpoints and submissions are active.
+- If it is missing or empty, endpoints return 404 and signal submission silently no-ops.
 
-Start your Django project:
+## Key Verification URLs
 
-```bash
-python manage.py runserver
+When enabled, the package serves both required verification endpoints:
+
+- `/indexnow/key.txt`
+- `/<INDEXNOW_API_KEY>.txt` (served by middleware at site root)
+
+Both return plain text with exactly:
+
+```text
+<your_key>\n
 ```
 
-Open the following URL in your browser:
+## Signal API
 
-```
-http://localhost:8000/indexnow/key.txt
-```
-
-If everything is configured correctly, you should see your API key printed as plain text.
-
-This file is required by IndexNow to verify site ownership.
-
----
-
-## Usage
-
-`django-indexnow` exposes a signal that you can dispatch whenever a URL should be indexed.
-
-### Sending a URL to IndexNow
+Dispatch `indexnow.signals.indexnow` whenever a URL should be submitted:
 
 ```python
 from indexnow.signals import indexnow
 
-indexnow.send(
-    sender=BlogPost,
-    url=blog_post.get_absolute_url(),
-)
+indexnow.send(sender=BlogPost, url=blog_post.get_absolute_url())
 ```
 
-### Recommended integration
+Relative URLs are resolved against `https://<site.domain>` from `Site.objects.get_current()`.
+Absolute URLs are submitted as-is.
 
-A common pattern is to dispatch the signal from Django model signals:
-
-* `post_save` (create/update)
-* `post_delete`
-
-Example:
+## post_save / post_delete Integration Example
 
 ```python
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+
 from indexnow.signals import indexnow
 from .models import BlogPost
 
 
 @receiver(post_save, sender=BlogPost)
-def index_blogpost_save(sender, instance, **kwargs):
+def on_blogpost_saved(sender, instance, **kwargs):
     indexnow.send(sender=sender, url=instance.get_absolute_url())
 
 
 @receiver(post_delete, sender=BlogPost)
-def index_blogpost_delete(sender, instance, **kwargs):
+def on_blogpost_deleted(sender, instance, **kwargs):
     indexnow.send(sender=sender, url=instance.get_absolute_url())
 ```
 
----
+## Management Command
 
-## Supported search engines
+Generate a key:
 
-IndexNow is currently supported by:
+```bash
+python manage.py indexnow_generate_key
+```
 
-* Bing
-* Yandex
-* Seznam
-* Naver
+Generate and print settings assignment:
 
-Other search engines may adopt the protocol in the future.
+```bash
+python manage.py indexnow_generate_key --set
+```
 
----
+## Supported Search Engines
+
+IndexNow is currently supported by engines including Bing, Yandex, Seznam, and Naver.
 
 ## License
 
-MIT License
+MIT. See [LICENSE](LICENSE).
