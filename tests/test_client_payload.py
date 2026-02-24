@@ -40,6 +40,7 @@ class ClientPayloadTests(SimpleTestCase):
             {
                 "host": "example.com",
                 "key": "testkey",
+                "keyLocation": "https://example.com/testkey.txt",
                 "urlList": ["https://example.com/path/"],
             },
         )

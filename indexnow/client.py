@@ -96,9 +96,12 @@ def _build_payload(urls: Iterable[str]) -> dict[str, object]:
             )
 
     site = get_site()
+    key = get_api_key()
+    key_location = f"https://{site.domain}/{key}.txt"
     return {
         "host": site.domain,
-        "key": get_api_key(),
+        "key": key,
+        "keyLocation": key_location,
         "urlList": absolute_urls,
     }
 
