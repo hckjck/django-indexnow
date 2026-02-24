@@ -18,11 +18,6 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "indexnow",
 ]
-
-MIDDLEWARE = [
-    # ...
-    "indexnow.middleware.IndexNowKeyFileMiddleware",
-]
 ```
 
 Expose the app endpoint:
@@ -57,16 +52,30 @@ Behavior is automatic:
 
 ## Key Verification URLs
 
-When enabled, the package serves both required verification endpoints:
+When enabled, the package serves:
 
-- `/indexnow/key.txt`
-- `/<INDEXNOW_API_KEY>.txt` (served by middleware at site root)
+- `/indexnow/key.txt` via `indexnow.urls`
+- `/<INDEXNOW_API_KEY>.txt` only if middleware is enabled
 
 Both return plain text with exactly:
 
 ```text
 <your_key>\n
 ```
+
+### Optional middleware for root key file
+
+The root key file endpoint (`/<INDEXNOW_API_KEY>.txt`) is provided by middleware.
+If you need that endpoint, add:
+
+```python
+MIDDLEWARE = [
+    # ...
+    "indexnow.middleware.IndexNowKeyFileMiddleware",
+]
+```
+
+If you do not add this middleware, `/indexnow/key.txt` still works.
 
 ## Signal API
 
@@ -113,6 +122,20 @@ Generate and print settings assignment:
 
 ```bash
 python manage.py indexnow_generate_key --set
+```
+
+## Running Tests
+
+From the repository root:
+
+```bash
+make test
+```
+
+Or directly with Django:
+
+```bash
+env/python/bin/python -m django test --settings=tests.test_settings
 ```
 
 ## Supported Search Engines
