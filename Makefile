@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help test clean build check package
+.PHONY: help test clean build check package bump-version tag-version
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' Makefile | sed 's/:.*## /\t/'
@@ -23,3 +23,13 @@ check: ## Validate built artifacts (twine if available)
 	fi
 
 package: build check ## Build and validate package artifacts
+
+bump-version: ## Bump version in pyproject.toml and indexnow/__init__.py (usage: make bump-version VERSION=0.1.1)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Usage: make bump-version VERSION=x.y.z[-suffix]"; \
+		exit 1; \
+	fi
+	@python3 scripts/bump_version.py "$(VERSION)"
+
+tag-version: ## Create git tag from pyproject.toml version (use DRY_RUN=1 to preview)
+	@python3 scripts/tag_version.py $(if $(DRY_RUN),--dry-run,)
