@@ -138,6 +138,19 @@ Or directly with Django:
 env/python/bin/python -m django test --settings=tests.test_settings
 ```
 
+## CI/CD and Releases
+
+GitHub Actions workflow: `.github/workflows/ci-cd.yml`
+
+- On pull requests and pushes to `main`: runs tests and builds/checks artifacts.
+- On version tags (examples: `0.1.1`, `v0.1.1`, `0.1.1-rc1`, `v0.1.1-rc1`) or published releases:
+  - uploads `dist/*.whl` and `dist/*.tar.gz` to the GitHub Release
+  - publishes a package image to GitHub Container Registry:
+    - `ghcr.io/<owner>/django-indexnow:<tag>`
+
+Note: GitHub Packages does not provide a Python package registry endpoint.
+This project publishes Python artifacts to Releases and uses GHCR for registry publishing.
+
 ## Supported Search Engines
 
 IndexNow is currently supported by engines including Bing, Yandex, Seznam, and Naver.

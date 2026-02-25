@@ -1,0 +1,6 @@
+FROM alpine:3.20
+
+WORKDIR /packages
+COPY dist/ /packages/
+
+CMD ["/bin/sh", "-lc", "ls -lah /packages"]
