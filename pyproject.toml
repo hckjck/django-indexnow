@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-indexnow"
-version = "0.1.0"
+version = "0.1.0-rc3"
 description = "Minimal Django app for IndexNow URL submission via signals."
 readme = "README.md"
 requires-python = ">=3.9"
