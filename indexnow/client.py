@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 _DEDUPE_LOCK = threading.Lock()
 _DEDUPE_CACHE: dict[str, float] = {}
 
-
 DEFAULT_ENDPOINT = "https://api.indexnow.org/indexnow"
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEDUPE_SECONDS = 60
@@ -110,8 +109,6 @@ def _submit_payload(payload: dict[str, object]) -> None:
     endpoint = getattr(settings, "INDEXNOW_ENDPOINT", DEFAULT_ENDPOINT)
     timeout = int(getattr(settings, "INDEXNOW_TIMEOUT", DEFAULT_TIMEOUT))
     user_agent = getattr(settings, "INDEXNOW_USER_AGENT", f"django-indexnow/{__version__}")
-    debug_logging = bool(getattr(settings, "INDEXNOW_DEBUG_LOGGING", False))
-
     body = json.dumps(payload).encode("utf-8")
     request = Request(
         endpoint,
@@ -123,10 +120,30 @@ def _submit_payload(payload: dict[str, object]) -> None:
         },
     )
 
+    logger.debug(
+        "IndexNow request: method=%s endpoint=%s timeout=%s payload=%s",
+        request.get_method(),
+        endpoint,
+        timeout,
+        {
+            "host": payload.get("host"),
+            "keyLocation": payload.get("keyLocation"),
+            "urlList": payload.get("urlList"),
+        },
+    )
+
     try:
-        with urlopen(request, timeout=timeout):
-            if debug_logging:
-                logger.debug("IndexNow submission succeeded for %s", payload.get("urlList"))
+        with urlopen(request, timeout=timeout) as response:
+            logger.info("IndexNow indexed URLs: %s", payload.get("urlList"))
+
+            status = getattr(response, "status", None)
+            if status is None and hasattr(response, "getcode"):
+                status = response.getcode()
+            logger.debug(
+                "IndexNow response: status=%s reason=%s",
+                status,
+                getattr(response, "reason", None),
+            )
     except Exception:
         logger.exception("IndexNow submission failed")
 

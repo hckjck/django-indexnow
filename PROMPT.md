@@ -155,7 +155,6 @@ Support the following settings only:
 * `INDEXNOW_API_KEY` (string, optional; absence disables app)
 * `INDEXNOW_ENDPOINT` (optional, default `https://api.indexnow.org/indexnow`)
 * `INDEXNOW_TIMEOUT` (optional, default `5`)
-* `INDEXNOW_DEBUG_LOGGING` (optional bool, default `False`)
 * `INDEXNOW_USER_AGENT` (optional, default `"django-indexnow/<version>"`)
 * `INDEXNOW_DEDUPE_SECONDS` (optional int, default `60`; `0` disables dedupe)
 
@@ -359,4 +358,3 @@ Write a polished README including:
 Return the **full contents of all files**, clearly labeled by file path, using proper code blocks.
 
 Do **not** omit any files.
-

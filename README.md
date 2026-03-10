@@ -40,10 +40,11 @@ Supported settings:
 INDEXNOW_API_KEY = "your-32-char-hex-key"  # optional; missing/empty disables app
 INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow"  # optional
 INDEXNOW_TIMEOUT = 5  # optional
-INDEXNOW_DEBUG_LOGGING = False  # optional
 INDEXNOW_USER_AGENT = "django-indexnow/0.1.0"  # optional
 INDEXNOW_DEDUPE_SECONDS = 60  # optional; 0 disables dedupe
 ```
+
+Logging uses Python's standard logging. Configure the `indexnow` logger in your Django `LOGGING` settings to control emitted levels.
 
 Behavior is automatic:
 

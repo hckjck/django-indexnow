@@ -61,3 +61,36 @@ class ClientPayloadTests(SimpleTestCase):
         submit_url("/same/")
 
         self.assertEqual(urlopen_mock.call_count, 1)
+
+    @patch("indexnow.client.logger")
+    @patch("indexnow.client.urlopen")
+    @patch("indexnow.client.Site")
+    @override_settings(
+        INDEXNOW_API_KEY="testkey",
+    )
+    def test_success_logs_request_indexed_urls_and_response(
+        self, site_mock: Mock, urlopen_mock: Mock, logger_mock: Mock
+    ) -> None:
+        site_mock.objects.get_current.return_value = Mock(domain="example.com")
+        urlopen_mock.return_value.__enter__.return_value = Mock(status=200, reason="OK")
+
+        submit_url("/path/")
+
+        logger_mock.info.assert_called_once()
+        self.assertEqual(logger_mock.debug.call_count, 2)
+        logger_mock.exception.assert_not_called()
+
+    @override_settings(
+        INDEXNOW_API_KEY="testkey",
+    )
+    @patch("indexnow.client.logger")
+    @patch("indexnow.client.urlopen", side_effect=RuntimeError("boom"))
+    @patch("indexnow.client.Site")
+    def test_submission_error_is_logged(
+        self, site_mock: Mock, _urlopen_mock: Mock, logger_mock: Mock
+    ) -> None:
+        site_mock.objects.get_current.return_value = Mock(domain="example.com")
+
+        submit_url("/path/")
+
+        logger_mock.exception.assert_called_once_with("IndexNow submission failed")
